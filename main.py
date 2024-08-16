@@ -164,7 +164,12 @@ def get_edto_version_from_git(component_name, new_version):
     skmb_reactive_dto = ''
     clone_path = GIT_PATH + component_name
     repo_url = GIT_LINK + component_name + '.git'
-    repo = glib.get_repo(repo_url, clone_path)
+
+    try:
+        repo = glib.get_repo(repo_url, clone_path)
+    except SystemExit:
+        return skmb_reactive_dto
+
     repo = glib.update_repo(repo)
     branches = glib.get_branches_with_tag(repo, new_version)
     if branches:
@@ -470,16 +475,27 @@ def getSferaTask(taskId):
             response = session.get(url, verify=False)
             return json.loads(response.text)
 
-
-# Задаем константы
-page_id = '1313946'
-release = 'OKR_20240825_ATM' # Метка релиза
-new_version = '2403.5.0' # Текущая версия сервиса
-story = 'SKOKR-6431'
-for_publication_flg = False # Если True - то публикуем, если False, только возврат списка задач
+release = 'OKR_20240922_ATM' # Метка релиза
+for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
-# ТОЛЬКО для генерации новых страниц
-parent_page = '1323003' # ТОЛЬКО для генерации новых страниц
+
+# Считываем данные из CSV файла в DataFrame
+release_df = pd.read_csv('release_info.csv', dtype=str)
+# Извлечение данных из DataFrame по ключу (номеру релиза)
+release_info = release_df[release_df['release'] == release].iloc[0]
+
+# Задание переменных на основе данных из DataFrame
+page_id = release_info['page_id']
+new_version = release_info['new_version']
+story = release_info['story']
+parent_page = release_info['parent_page']
+
+# Вывод переменных для проверки
+print(f"page_id: {page_id}")
+print(f"release: {release}")
+print(f"new_version: {new_version}")
+print(f"story: {story}")
+print(f"parent_page: {parent_page}")
 
 # Генерация страницы ЗНИ с QL выборками
 task_lst = generating_release_page(parent_page, release, new_version, for_publication_flg, replace_flg, page_id)

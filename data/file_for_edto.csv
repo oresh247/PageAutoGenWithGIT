@@ -1,0 +1,11 @@
+skmb-client-profile-adapter build.gradle
+skmb-credithistory-reactive-service build.gradle
+skmb-fin-statements-adapter build.gradle
+skmb-leasing-front-adapter gradle.properties
+skmb-manual-verify-adapter build.gradle
+skmb-monitoring-service gradle.properties
+skmb-okr-reactive-service-v2 build.gradle
+skmb-okr-service gradle.properties
+skmb-pim-adapter build.gradle
+skmb-pledge-adapter build.gradle
+skmb-spr3 gradle.properties

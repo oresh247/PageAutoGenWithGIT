@@ -190,6 +190,8 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
     inventory_changed_dic = {}
     edto_lst = [] # Список версий еДТО по каждому микросервису
     edto_dic = {}
+    task_comments_dic = {}
+    task_comments_lst = []  # Список версий еДТО по каждому микросервису
 
 
     counter = 10 # Начальный счетчик макросов на странице
@@ -197,7 +199,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
     for task in tasks['content']:
         new_task = task['number']
         component_name = ''
-        text = ''
+        inventory = ''
         service_build = '' # Предварительно обнуляем номер сборки для задачи
 
 
@@ -210,6 +212,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
                 if component_name not in component_lst:
                     component_lst.append(component['name'])
                     inventory_changed_dic[component_name] = ''
+                    task_comments_dic[component_name] = ''
                     edto_dic[component_name] = get_edto_version_from_git(component_name, new_version)
                     template = f"""
             <p>  <macro class=is-locked data-name=SferaTasks id=SferaTasks-mce_{counter} contenteditable=false    data-rtc-uid=16cce9cf-5572-4a48-a85b-3375c3c8ed6d><macro-parameter data-name=query      data-rtc-uid=d2a03405-badc-4db9-b558-c63defb0c191>label = '{release}' and      component='{component_name}'</macro-parameter><macro-parameter data-name=name      data-rtc-uid=299855c1-a21a-4a91-88b3-99539008e3c6>{release}_{component_name}</macro-parameter><macro-parameter      data-name=maxTasks data-rtc-uid=4a9ba1c3-6e18-4939-a108-7890b7347054>20</macro-parameter><macro-parameter      data-name=attributes      data-rtc-uid=150ff77e-2639-48fa-bba0-32dd06b4104f>[{{'name':'Ключ','code':'number'}},{{'name':'Название','code':'name'}},{{'name':'Статус','code':'status'}},{{'name':'Исполнитель','code':'assignee'}}]</macro-parameter><macro-parameter      data-name=createdDate      data-rtc-uid=05fa3e33-7799-4ddc-bc7e-316a518aeeaa>1716579558662</macro-parameter><macro-parameter      data-name=isLocked      data-rtc-uid=3ba10cb8-4865-45c1-aae9-0e8c5437f9c8>false</macro-parameter><macro-rich-text      data-rtc-uid=5dfe052c-765d-4974-8d5d-4d3e356f9bd9></macro-rich-text></macro></p>
@@ -230,24 +233,30 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
         if component_name != '':
             # Обрабатываем комментарий
             comments = get_task_comments(new_task)
-            if 'content' in comments:
-                for comment in comments['content']:
-                    comment_text = comment['text']
-                    if '#Инвентори' in comment_text:
-                        text = text + '<br>' + comment_text
-                        text = text.replace('#Инвентори', '')
-                        text = text.replace('\n', '<br>')
-                    if service_build == '':
-                        if '#build' in comment_text:
-                            service_build = str.split(comment_text)[-1]
+
+            # Получаем прописанные инвентари в комментариях задачи
+            inventory = get_comment_text(comments, '#Инвентори', 0)
+
+            # if 'content' in comments:
+            #     for comment in comments['content']:
+            #         comment_text = comment['text']
+            #         if '#Инвентори' in comment_text:
+            #             text = text + '<br>' + comment_text
+            #             text = text.replace('#Инвентори', '')
+            #             text = text.replace('\n', '<br>')
+            #         if service_build == '':
+            #             if '#build' in comment_text:
+            #                 service_build = str.split(comment_text)[-1]
 
             # Если есть изменения инвентори
-            if text != '':
+            if inventory != '':
                 if inventory_changed_dic[component_name] != '':
-                    inventory_changed_dic[component_name] = inventory_changed_dic[component_name] + '\n' + text
+                    inventory_changed_dic[component_name] = inventory_changed_dic[component_name] + '\n' + inventory
                 else:
-                    inventory_changed_dic[component_name] ='Изменение инвентори:\n' + text
+                    inventory_changed_dic[component_name] ='Изменение инвентори:\n' + inventory
 
+            # Получаем последнюю сборку прописанную в комментариях задачи
+            service_build = get_comment_text(comments, '#build', 1)
             # Если есть номер сборки
             if service_build != '':
                 # Получаем сборку еДТО
@@ -256,9 +265,37 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
                     if component_name in inventory_changed_dic:
                         edto_dic[component_name] = edto_dic[component_name] + '\n' + service_edto_version
                     else:
-                        edto_dic[component_name] = service_build
+                        edto_dic[component_name] = service_edto_version
 
-    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values())
+            # Получаем комментарии к задаче
+            task_comments = get_comment_text(comments, '#comment', 0)
+            # Если комментарии к задаче
+            if task_comments != '':
+                if task_comments_dic[component_name] != '':
+                    task_comments_dic[component_name] = task_comments_dic[component_name] + '\n' + task_comments
+                else:
+                    task_comments_dic[component_name] =f'Комментарий к задаче {new_task}:\n' + task_comments
+
+
+
+    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values())
+
+
+def get_comment_text(comments, tag, template_flag):
+    text = ''
+    if 'content' in comments:
+        for comment in comments['content']:
+            comment_text = comment['text']
+            if tag in comment_text:
+                if template_flag == 0:
+                    text = text + '<br>' + comment_text
+                    text = text.replace(tag, '')
+                    text = text.replace('\n', '<br>')
+                if template_flag == 1 and text == '':
+                    text = str.split(comment_text)[-1]
+    return text
+
+
 
 def find_dto_version(text):
     # Используем регулярное выражение для поиска строки с dto_exchange_version
@@ -297,13 +334,16 @@ def get_edto_version(component_name, service_build, edto_file_names):
     return find_dto_version(response.text)
 
 
-def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst):
+def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst):
     # Проверка на пустоту списка inventory_changed_lst
     if not inventory_changed_lst:
         inventory_changed_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
-    # Проверка на пустоту списка inventory_changed_lst
+    # Проверка на пустоту списка edto_lst
     if not edto_lst:
         edto_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
+    # Проверка на пустоту списка task_comments_lst
+    if not task_comments_lst:
+        task_comments_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
 
     tasks_df = pd.DataFrame({
         'Сервис': component_lst,
@@ -315,7 +355,7 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
         'Тест-кейсы': '',
         'БЛОК': '',
         'Изменение инвентари': inventory_changed_lst,
-        'Комментарии': ''
+        'Комментарии': task_comments_lst
     })
     # Сортировка DataFrame по столбцу 'component_lst'
     tasks_df = tasks_df.sort_values(by='Сервис')
@@ -333,10 +373,10 @@ def generating_release_page(parent_page, release, new_version, for_publication_f
     tasks = get_release_tasks(release)
 
     # Обрабатываем запрос, проходя по всем задачам и формируя списки
-    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
+    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
 
     # Создаем dataframe
-    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst)
+    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst)
     pd.set_option('display.width', 320)
     pd.set_option('display.max_columns', 20)
     np.set_printoptions(linewidth=320)

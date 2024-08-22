@@ -213,7 +213,8 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
                     component_lst.append(component['name'])
                     inventory_changed_dic[component_name] = ''
                     task_comments_dic[component_name] = ''
-                    edto_dic[component_name] = get_edto_version_from_git(component_name, new_version)
+                    #edto_dic[component_name] = get_edto_version_from_git(component_name, new_version)
+                    edto_dic[component_name] = get_edto_version(component_name, new_version, edto_file_names)
                     template = f"""
             <p>  <macro class=is-locked data-name=SferaTasks id=SferaTasks-mce_{counter} contenteditable=false    data-rtc-uid=16cce9cf-5572-4a48-a85b-3375c3c8ed6d><macro-parameter data-name=query      data-rtc-uid=d2a03405-badc-4db9-b558-c63defb0c191>label = '{release}' and      component='{component_name}'</macro-parameter><macro-parameter data-name=name      data-rtc-uid=299855c1-a21a-4a91-88b3-99539008e3c6>{release}_{component_name}</macro-parameter><macro-parameter      data-name=maxTasks data-rtc-uid=4a9ba1c3-6e18-4939-a108-7890b7347054>20</macro-parameter><macro-parameter      data-name=attributes      data-rtc-uid=150ff77e-2639-48fa-bba0-32dd06b4104f>[{{'name':'Ключ','code':'number'}},{{'name':'Название','code':'name'}},{{'name':'Статус','code':'status'}},{{'name':'Исполнитель','code':'assignee'}}]</macro-parameter><macro-parameter      data-name=createdDate      data-rtc-uid=05fa3e33-7799-4ddc-bc7e-316a518aeeaa>1716579558662</macro-parameter><macro-parameter      data-name=isLocked      data-rtc-uid=3ba10cb8-4865-45c1-aae9-0e8c5437f9c8>false</macro-parameter><macro-rich-text      data-rtc-uid=5dfe052c-765d-4974-8d5d-4d3e356f9bd9></macro-rich-text></macro></p>
             """
@@ -504,7 +505,7 @@ def getSferaTask(taskId):
             return json.loads(response.text)
 
 release = 'OKR_20240922_ATM' # Метка релиза
-for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
+for_publication_flg = False # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 
 # Считываем данные из CSV файла в DataFrame

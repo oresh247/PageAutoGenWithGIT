@@ -505,7 +505,7 @@ def getSferaTask(taskId):
             return json.loads(response.text)
 
 release = 'OKR_20240922_ATM' # Метка релиза
-for_publication_flg = False # Если True - то публикуем, если False, только возврат списка задач
+for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 
 # Считываем данные из CSV файла в DataFrame

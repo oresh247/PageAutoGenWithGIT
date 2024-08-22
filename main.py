@@ -237,17 +237,6 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             # Получаем прописанные инвентари в комментариях задачи
             inventory = get_comment_text(comments, '#Инвентори', 0)
 
-            # if 'content' in comments:
-            #     for comment in comments['content']:
-            #         comment_text = comment['text']
-            #         if '#Инвентори' in comment_text:
-            #             text = text + '<br>' + comment_text
-            #             text = text.replace('#Инвентори', '')
-            #             text = text.replace('\n', '<br>')
-            #         if service_build == '':
-            #             if '#build' in comment_text:
-            #                 service_build = str.split(comment_text)[-1]
-
             # Если есть изменения инвентори
             if inventory != '':
                 if inventory_changed_dic[component_name] != '':
@@ -274,9 +263,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
                 if task_comments_dic[component_name] != '':
                     task_comments_dic[component_name] = task_comments_dic[component_name] + '\n' + task_comments
                 else:
-                    task_comments_dic[component_name] =f'Комментарий к задаче {new_task}:\n' + task_comments
-
-
+                    task_comments_dic[component_name] =f'{new_task}:\n' + task_comments
 
     return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values())
 

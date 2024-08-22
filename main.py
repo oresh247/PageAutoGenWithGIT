@@ -235,7 +235,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             comments = get_task_comments(new_task)
 
             # Получаем прописанные инвентари в комментариях задачи
-            inventory = get_comment_text(comments, '#Инвентори', 0)
+            inventory = get_comment_text(comments, '#inventory', 0)
 
             # Если есть изменения инвентори
             if inventory != '':
@@ -250,9 +250,10 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             if service_build != '':
                 # Получаем сборку еДТО
                 service_edto_version = get_edto_version(component_name, service_build, edto_file_names)
+                #service_edto_version = get_edto_version_from_git(component_name, service_build)
                 if service_edto_version != '':
                     if component_name in inventory_changed_dic:
-                        edto_dic[component_name] = edto_dic[component_name] + '\n' + service_edto_version
+                        edto_dic[component_name] = edto_dic[component_name] + '<br>' + service_edto_version
                     else:
                         edto_dic[component_name] = service_edto_version
 
@@ -261,9 +262,9 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             # Если комментарии к задаче
             if task_comments != '':
                 if task_comments_dic[component_name] != '':
-                    task_comments_dic[component_name] = task_comments_dic[component_name] + '\n' + task_comments
+                    task_comments_dic[component_name] = task_comments_dic[component_name] + '<br>' + task_comments
                 else:
-                    task_comments_dic[component_name] =f'{new_task}:\n' + task_comments
+                    task_comments_dic[component_name] =f'{new_task}:<br>' + task_comments
 
     return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values())
 

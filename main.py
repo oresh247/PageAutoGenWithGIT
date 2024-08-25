@@ -33,7 +33,9 @@ sferaUrlKnowledge2 = config["SFERA"]["sferaUrlKnowledge2"]
 sferaUrlRelations = config["SFERA"]["sferaUrlRelations"]
 sferaUrlEntityViews = config["SFERA"]["sferaUrlEntityViews"]
 sferaUrlSkmbRepos = config["SFERA"]["sferaUrlSkmbRepos"]
-sferaUrlDelete =  config["SFERA"]["sferaUrlDelete"]
+sferaUrlDelete = config["SFERA"]["sferaUrlDelete"]
+sferaUrlSkmbTestiPlan = config["SFERA"]["sferaUrlSkmbTestiPlan"]
+sferaUrlTestiPlan = config["SFERA"]["sferaUrlTestiPlan"]
 
 GIT_LINK = config["GIT"]["GIT_LINK"]
 GIT_PATH = config["GIT"]["GIT_PATH"]
@@ -196,9 +198,11 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
     task_comments_dic = {}
     task_comments_lst = []  # Список версий еДТО по каждому микросервису
     related_task_dic = {}
-
+    tast_cases_dic = {}
 
     counter = 10 # Начальный счетчик макросов на странице
+    test_cases = get_release_test_cases(release)
+
     # Перебираем массив задач релиза
     for task in tasks['content']:
         new_task = task['number']
@@ -293,9 +297,18 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             else:
                 related_task_dic[component_name] = related_components
 
+            # Ищем тест-кейсы
+            if test_cases != '':
+                test_case = get_test_case_by_release(test_cases, new_task)
+                # Если есть связанные задачи
+                if component_name in tast_cases_dic:
+                    tast_cases_dic[component_name] = tast_cases_dic[component_name] + '<br>' + 'https://sfera.inno.local/testing/project/SKMB/test-issue/' + test_case
+                else:
+                    tast_cases_dic[component_name] = 'https://sfera.inno.local/testing/project/SKMB/test-issue/' + test_case
 
 
-    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values()), list(related_task_dic.values())
+
+    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values()), list(related_task_dic.values()), list(tast_cases_dic.values())
 
 
 def get_comment_text(comments, tag, template_flag):
@@ -351,7 +364,7 @@ def get_edto_version(component_name, service_build, edto_file_names):
     return find_dto_version(response.text)
 
 
-def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst):
+def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst):
     # Проверка на пустоту списка inventory_changed_lst
     if not inventory_changed_lst:
         inventory_changed_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
@@ -364,6 +377,9 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
     # Проверка на пустоту списка related_task_lst
     if not related_task_lst:
         related_task_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
+    # Проверка на пустоту списка tast_cases_lst
+    if not tast_cases_lst:
+        tast_cases_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
 
     tasks_df = pd.DataFrame({
         'Сервис': component_lst,
@@ -372,7 +388,7 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
         'Версия для откатки': prod_version_lst,
         'Требует выкатку связанный сервис': related_task_lst,
         'Версия еДТО': edto_lst,
-        'Тест-кейсы': '',
+        'Тест-кейсы': tast_cases_lst,
         'Изменение инвентари': inventory_changed_lst,
         'Комментарии': task_comments_lst
     })
@@ -392,10 +408,10 @@ def generating_release_page(parent_page, release, new_version, for_publication_f
     tasks = get_release_tasks(release)
 
     # Обрабатываем запрос, проходя по всем задачам и формируя списки
-    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
+    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
 
     # Создаем dataframe
-    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst)
+    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst)
     pd.set_option('display.width', 320)
     pd.set_option('display.max_columns', 20)
     np.set_printoptions(linewidth=320)
@@ -534,8 +550,52 @@ def getSferaTask(taskId):
     response = session.get(url, verify=False)
     return json.loads(response.text)
 
-release = 'OKR_20240908_ATM' # Метка релиза
-for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
+
+def get_test_plans(search_string):
+    query = "?sort=entityInfo.createdAt%2Cdesc&page=0&size=50&searchString="
+    url = sferaUrlSkmbTestiPlan + query + search_string
+    response = session.get(url, verify=False)
+    return json.loads(response.text)
+
+
+def get_test_cases(test_plan_code):
+    url = sferaUrlTestiPlan + test_plan_code + '/test-plan-cases'
+    response = session.get(url, verify=False)
+    return json.loads(response.text)
+
+def extract_date(release):
+    # Split the string to get the date part
+    date_part = release.split('_')[1]
+    # Extract the year, month, and day
+    year = date_part[:4]
+    month = date_part[4:6]
+    day = date_part[6:8]
+    # Return the date in the desired format
+    return f"{day}.{month}"
+
+
+def get_test_case_by_release(test_cases, task_name):
+    for test_case in test_cases:
+        if task_name in test_case['name']:
+            test_case_id = test_case['testCaseId']
+            return test_case_id
+    return ''
+
+
+def get_release_test_cases(release):
+    search_string = extract_date(release)
+    test_plans = get_test_plans(search_string)
+
+    for test_plan in test_plans['content']:
+        if 'Проверки' in test_plan['name']:
+            test_plan_code = test_plan['testPlanCode']
+            test_cases = get_test_cases(test_plan_code)
+            return test_cases['content']
+    return ''
+
+
+release = 'OKR_20240922_ATM' # Метка релиза
+for_publication_flg = False # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 
 # Считываем данные из CSV файла в DataFrame
@@ -558,12 +618,12 @@ print(f"parent_page: {parent_page}")
 
 # Генерация страницы ЗНИ с QL выборками
 task_lst = generating_release_page(parent_page, release, new_version, for_publication_flg, replace_flg, page_id)
-if story != '':
-    relation_lst = get_links(story)
-    delete_links(story, relation_lst)
-    add_task_to_story(task_lst, story)
-else:
-    story = createSferaTask(release)
-    add_task_to_story(task_lst, story)
-    print(story)
+# if story != '':
+#     relation_lst = get_links(story)
+#     delete_links(story, relation_lst)
+#     add_task_to_story(task_lst, story)
+# else:
+#     story = createSferaTask(release)
+#     add_task_to_story(task_lst, story)
+#     print(story)
 

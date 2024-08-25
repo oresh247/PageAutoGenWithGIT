@@ -381,6 +381,9 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
     if not tast_cases_lst:
         tast_cases_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
 
+    # Заменить пустые значения на строку 'нет зависимостей'
+    related_task_lst = ['нет зависимостей' if item == '' else item for item in related_task_lst]
+
     tasks_df = pd.DataFrame({
         'Сервис': component_lst,
         'Задачи в сфере': task_directLink_lst,

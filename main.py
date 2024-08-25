@@ -563,6 +563,7 @@ def get_test_cases(test_plan_code):
     response = session.get(url, verify=False)
     return json.loads(response.text)
 
+
 def extract_date(release):
     # Split the string to get the date part
     date_part = release.split('_')[1]
@@ -618,12 +619,12 @@ print(f"parent_page: {parent_page}")
 
 # Генерация страницы ЗНИ с QL выборками
 task_lst = generating_release_page(parent_page, release, new_version, for_publication_flg, replace_flg, page_id)
-# if story != '':
-#     relation_lst = get_links(story)
-#     delete_links(story, relation_lst)
-#     add_task_to_story(task_lst, story)
-# else:
-#     story = createSferaTask(release)
-#     add_task_to_story(task_lst, story)
-#     print(story)
+if story != '':
+    relation_lst = get_links(story)
+    delete_links(story, relation_lst)
+    add_task_to_story(task_lst, story)
+else:
+    story = createSferaTask(release)
+    add_task_to_story(task_lst, story)
+    print(story)
 

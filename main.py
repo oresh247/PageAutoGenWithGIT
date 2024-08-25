@@ -39,6 +39,9 @@ GIT_LINK = config["GIT"]["GIT_LINK"]
 GIT_PATH = config["GIT"]["GIT_PATH"]
 GIT_BRANCH_PREFIX = config["GIT"]["GIT_BRANCH_PREFIX"]
 
+TASK_RELATION_TYPE_LST = json.loads(config["TASK"]["TASK_RELATION_TYPE_LST"])
+TASK_ENTITY_TYPE_LST = json.loads(config["TASK"]["TASK_ENTITY_TYPE_LST"])
+
 session = requests.Session()
 session.post(sferaUrlLogin, json={"username": devUser, "password": devPassword}, verify=False)
 
@@ -192,6 +195,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
     edto_dic = {}
     task_comments_dic = {}
     task_comments_lst = []  # Список версий еДТО по каждому микросервису
+    related_task_dic = {}
 
 
     counter = 10 # Начальный счетчик макросов на странице
@@ -230,7 +234,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             print("Нет компоненты: ",task['number'])
 
 
-        # Учитываем сборку и инвентори, если указан микросервис в задаче
+        # Учитываем дополнительные параметры задачи, если указан микросервис
         if component_name != '':
             # Обрабатываем комментарий
             comments = get_task_comments(new_task)
@@ -260,14 +264,38 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
 
             # Получаем комментарии к задаче
             task_comments = get_comment_text(comments, '#comment', 0)
-            # Если комментарии к задаче
+            # Если есть комментарии к задаче
             if task_comments != '':
                 if task_comments_dic[component_name] != '':
                     task_comments_dic[component_name] = task_comments_dic[component_name] + '<br>' + task_comments
                 else:
                     task_comments_dic[component_name] =f'{new_task}:<br>' + task_comments
 
-    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values())
+            # Обрабатываем связанные задачи
+            current_task = getSferaTask(new_task)
+            related_components = ''
+            if 'relatedEntities' in current_task:
+                for related_entity in current_task['relatedEntities']:
+                    if related_entity['relationType'] in TASK_RELATION_TYPE_LST:
+                        if related_entity['entity']['type'] in TASK_ENTITY_TYPE_LST:
+                            related_task_id = related_entity['entity']['number']
+                            related_task = getSferaTask(related_task_id)
+                            related_component_name = ''
+                            if 'component' in related_task:
+                                for component in related_task['component']:
+                                    related_component_name = component['name']
+
+                            related_components = related_components + '<br>' + f"{new_task} - {related_task_id} [{related_component_name}]"
+
+            # Если есть связанные задачи
+            if component_name in related_task_dic:
+                related_task_dic[component_name] = related_task_dic[component_name] + related_components
+            else:
+                related_task_dic[component_name] = related_components
+
+
+
+    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values()), list(related_task_dic.values())
 
 
 def get_comment_text(comments, tag, template_flag):
@@ -323,7 +351,7 @@ def get_edto_version(component_name, service_build, edto_file_names):
     return find_dto_version(response.text)
 
 
-def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst):
+def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst):
     # Проверка на пустоту списка inventory_changed_lst
     if not inventory_changed_lst:
         inventory_changed_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
@@ -333,16 +361,18 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
     # Проверка на пустоту списка task_comments_lst
     if not task_comments_lst:
         task_comments_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
+    # Проверка на пустоту списка related_task_lst
+    if not related_task_lst:
+        related_task_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
 
     tasks_df = pd.DataFrame({
         'Сервис': component_lst,
         'Задачи в сфере': task_directLink_lst,
         'Версия поставки Новый цод': new_version,
         'Версия для откатки': prod_version_lst,
-        'Требует выкатку связанный сервис': '',
+        'Требует выкатку связанный сервис': related_task_lst,
         'Версия еДТО': edto_lst,
         'Тест-кейсы': '',
-        'БЛОК': '',
         'Изменение инвентари': inventory_changed_lst,
         'Комментарии': task_comments_lst
     })
@@ -362,10 +392,10 @@ def generating_release_page(parent_page, release, new_version, for_publication_f
     tasks = get_release_tasks(release)
 
     # Обрабатываем запрос, проходя по всем задачам и формируя списки
-    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
+    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
 
     # Создаем dataframe
-    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst)
+    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst)
     pd.set_option('display.width', 320)
     pd.set_option('display.max_columns', 20)
     np.set_printoptions(linewidth=320)
@@ -500,11 +530,11 @@ def delete_links(taskId, relation_lst):
 
 
 def getSferaTask(taskId):
-            url = sferaUrl + taskId
-            response = session.get(url, verify=False)
-            return json.loads(response.text)
+    url = sferaUrl + taskId
+    response = session.get(url, verify=False)
+    return json.loads(response.text)
 
-release = 'OKR_20240922_ATM' # Метка релиза
+release = 'OKR_20240908_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 

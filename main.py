@@ -558,6 +558,8 @@ def get_test_plans(search_string):
     query = "?sort=entityInfo.createdAt%2Cdesc&page=0&size=50&searchString="
     url = sferaUrlSkmbTestiPlan + query + search_string
     response = session.get(url, verify=False)
+    if response.ok != True:
+        return ""
     return json.loads(response.text)
 
 
@@ -589,6 +591,8 @@ def get_test_case_by_release(test_cases, task_name):
 def get_release_test_cases(release):
     search_string = extract_date(release)
     test_plans = get_test_plans(search_string)
+    if test_plans == '':
+        return ''
 
     for test_plan in test_plans['content']:
         if 'Проверки' in test_plan['name']:
@@ -598,8 +602,8 @@ def get_release_test_cases(release):
     return ''
 
 
-release = 'OKR_20240922_ATM' # Метка релиза
-for_publication_flg = False # Если True - то публикуем, если False, только возврат списка задач
+release = 'OKR_20240922_IR' # Метка релиза
+for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 
 # Считываем данные из CSV файла в DataFrame

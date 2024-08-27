@@ -1,36 +1,73 @@
-skmb-antifraud-service 2401.0.48
-skmb-antifraud-ui 2401.1.46
-skmb-application-service 2402.7.0-release
-skmb-bpm-service 2401.6.0-release
+keycloak-service            11.0.14
+
+skmb-antifraud-service  2403.1.1-release
+
+skmb-antifraud-ui          2403.1.0-release
+
+skmb-application-service            2402.7.0-release
+
+skmb-bpm-service         2401.6.0-release
+
 skmb-checklist-adapter 2402.0.0-release
-skmb-client-profile-adapter 2402.4.0
-skmb-cre-adapter 2402.1.0-release
-skmb-credithistory-reactive-service 2403.4.0
-skmb-credithistory-service 2401.4.0-release
-skmb-currency-service 2401.0.0-release
-skmb-decision-adapter 2401.0.0-release
-skmb-dictionary-service 2402.2.0-release
-skmb-drp-reactive-adapter 2403.0.0-release
-skmb-dwh-reactive-adapter 2402.2.0-release
-skmb-etl-adapter 2402.1.0-release
-skmb-fin-statements-adapter 2403.4.0
-skmb-front-adapter 2402.13.0-release
-skmb-leasing-front-adapter 2402.8.0
-skmb-manual-verify-adapter 2402.3.0
-skmb-monitoring-service 2403.4.0
-skmb-moratorium-service 2401.1.0-release
-skmb-notification-adapter 2402.0.0-release
-skmb-okr-reactive-service-v2 2403.4.0
-skmb-okr-service 2402.8.0
-skmb-pim-adapter 2402.3.0
-skmb-pledge-adapter 2402.8.0
-skmb-preapproved-service 2402.15.0-release
-skmb-rbg-adapter 2402.2.0-release
-skmb-revision-service 2402.2.0-release
-skmb-scoring-model-storage 2402.4.0-release
-skmb-spr2-proactive 2402.4.0
-skmb-spr2-reactive 2402.2.0
-skmb-spr3 2402.8.0
-skmb-ui 2402.49.0-release
-skmb-ui-adapter 2402.12.0-release
-skmb-usbs-emulator 2304.10.0
+
+skmb-client-profile-adapter       2403.5.0
+
+skmb-cre-adapter          2402.1.0-release
+
+skmb-credithistory-reactive-service        2403.5.0
+
+skmb-credithistory-service         2401.4.0-release
+
+skmb-currency-service  2401.0.0-release
+
+skmb-decision-adapter  2401.0.0-release
+
+skmb-dictionary-service             2402.2.0-release
+
+skmb-drp-reactive-adapter        2403.0.0-release
+
+skmb-dwh-reactive-adapter       2402.2.0-release
+
+skmb-etl-adapter           2402.1.0-release
+
+skmb-fin-statements-adapter     2403.5.0
+
+skmb-front-adapter       2402.13.0-release
+
+skmb-leasing-front-adapter        2402.8.0
+
+skmb-manual-verify-adapter      2402.3.0
+
+skmb-monitoring-service            2403.4.0
+
+skmb-moratorium-service          2401.1.0-release
+
+skmb-notification-adapter          2402.0.0-release
+
+skmb-okr-reactive-service-v2     2403.4.0
+
+skmb-okr-service           2402.8.0
+
+skmb-pim-adapter         2402.3.0
+
+skmb-pledge-adapter    2402.8.0
+
+skmb-preapproved-service         2402.15.0-release
+
+skmb-rbg-adapter          2402.2.0-release
+
+skmb-revision-service    2402.2.0-release
+
+skmb-scoring-model-storage      2402.4.0-release
+
+skmb-spr2-proactive      2402.4.0
+
+skmb-spr2-reactive        2402.2.0
+
+skmb-spr3         2403.5.0
+
+skmb-ui             2402.49.0-release
+
+skmb-ui-adapter            2402.12.0-release
+
+skmb-usbs-emulator      2304.10.0

@@ -36,6 +36,7 @@ sferaUrlSkmbRepos = config["SFERA"]["sferaUrlSkmbRepos"]
 sferaUrlDelete = config["SFERA"]["sferaUrlDelete"]
 sferaUrlSkmbTestiPlan = config["SFERA"]["sferaUrlSkmbTestiPlan"]
 sferaUrlTestiPlan = config["SFERA"]["sferaUrlTestiPlan"]
+sferaUrlSkmbTestiIssues = config["SFERA"]["sferaUrlSkmbTestiIssues"]
 
 GIT_LINK = config["GIT"]["GIT_LINK"]
 GIT_PATH = config["GIT"]["GIT_PATH"]
@@ -201,7 +202,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
     tast_cases_dic = {}
 
     counter = 10 # Начальный счетчик макросов на странице
-    test_cases = get_release_test_cases(release)
+    #test_cases = get_release_test_cases(release)
 
     # Перебираем массив задач релиза
     for task in tasks['content']:
@@ -297,14 +298,13 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             else:
                 related_task_dic[component_name] = related_components
 
-            # Ищем тест-кейсы
-            if test_cases != '':
-                test_case = get_test_case_by_release(test_cases, new_task)
-                # Если есть связанные задачи
-                if component_name in tast_cases_dic:
-                    tast_cases_dic[component_name] = tast_cases_dic[component_name] + '<br>' + 'https://sfera.inno.local/testing/project/SKMB/test-issue/' + test_case
-                else:
-                    tast_cases_dic[component_name] = 'https://sfera.inno.local/testing/project/SKMB/test-issue/' + test_case
+            # Ищем тест-кейсы по номеру задачи
+            test_case = get_test_case_by_task_name(new_task)
+            # Если есть тест-кейсы
+            if component_name in tast_cases_dic:
+                tast_cases_dic[component_name] = tast_cases_dic[component_name] + '<br>' + test_case
+            else:
+                tast_cases_dic[component_name] = test_case
 
 
 
@@ -566,7 +566,23 @@ def get_test_plans(search_string):
 def get_test_cases(test_plan_code):
     url = sferaUrlTestiPlan + test_plan_code + '/test-plan-cases'
     response = session.get(url, verify=False)
+    if response.ok != True:
+        return ''
     return json.loads(response.text)
+
+
+def get_test_case_by_task_name(new_task):
+    result_str = ''
+    query = '?rootSectionId=137672&page=0&size=500&includeSubSections=true&sort=number%2Cdesc&searchString=' + new_task
+    url = sferaUrlSkmbTestiIssues + query
+    response = session.get(url, verify=False)
+    if response.ok:
+        test_cases = json.loads(response.text)
+        if test_cases['content']:
+            for test_case in test_cases['content']:
+                test_case_str = new_task + ' - (' + test_case['status'] + ') ' + 'https://sfera.inno.local/testing/project/SKMB/test-issue/' + test_case['testIssueCode']
+                result_str = result_str + '<br>' + test_case_str
+    return result_str
 
 
 def extract_date(release):
@@ -602,9 +618,10 @@ def get_release_test_cases(release):
     return ''
 
 
-release = 'OKR_20240922_IR' # Метка релиза
+release = 'OKR_20240908_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
+update_story_flg = False
 
 # Считываем данные из CSV файла в DataFrame
 release_df = pd.read_csv('release_info.csv', dtype=str)
@@ -626,12 +643,13 @@ print(f"parent_page: {parent_page}")
 
 # Генерация страницы ЗНИ с QL выборками
 task_lst = generating_release_page(parent_page, release, new_version, for_publication_flg, replace_flg, page_id)
-if story != '':
-    relation_lst = get_links(story)
-    delete_links(story, relation_lst)
-    add_task_to_story(task_lst, story)
-else:
-    story = createSferaTask(release)
-    add_task_to_story(task_lst, story)
-    print(story)
+if update_story_flg:
+    if story != '':
+        relation_lst = get_links(story)
+        delete_links(story, relation_lst)
+        add_task_to_story(task_lst, story)
+    else:
+        story = createSferaTask(release)
+        add_task_to_story(task_lst, story)
+        print(story)
 

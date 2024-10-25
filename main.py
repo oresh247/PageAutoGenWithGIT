@@ -272,7 +272,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             # Если есть комментарии к задаче
             if task_comments != '':
                 if task_comments_dic[component_name] != '':
-                    task_comments_dic[component_name] = task_comments_dic[component_name] + '<br>' + task_comments
+                    task_comments_dic[component_name] = task_comments_dic[component_name] + '<br>' + f'{new_task}:<br>' + task_comments
                 else:
                     task_comments_dic[component_name] =f'{new_task}:<br>' + task_comments
 
@@ -617,11 +617,10 @@ def get_release_test_cases(release):
             return test_cases['content']
     return ''
 
-
-release = 'OKR_20240908_ATM' # Метка релиза
+release = 'OKR_20241124_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
-update_story_flg = False
+update_story_flg = False # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)
 
 # Считываем данные из CSV файла в DataFrame
 release_df = pd.read_csv('release_info.csv', dtype=str)
@@ -644,12 +643,12 @@ print(f"parent_page: {parent_page}")
 # Генерация страницы ЗНИ с QL выборками
 task_lst = generating_release_page(parent_page, release, new_version, for_publication_flg, replace_flg, page_id)
 if update_story_flg:
-    if story != '':
-        relation_lst = get_links(story)
-        delete_links(story, relation_lst)
-        add_task_to_story(task_lst, story)
-    else:
+    if not isinstance(story, str):
         story = createSferaTask(release)
         add_task_to_story(task_lst, story)
         print(story)
+    else:
+        relation_lst = get_links(story)
+        delete_links(story, relation_lst)
+        add_task_to_story(task_lst, story)
 

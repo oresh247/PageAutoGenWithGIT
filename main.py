@@ -272,9 +272,9 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             # Если есть комментарии к задаче
             if task_comments != '':
                 if task_comments_dic[component_name] != '':
-                    task_comments_dic[component_name] = task_comments_dic[component_name] + '<br>' + f'{new_task}:<br>' + task_comments
+                    task_comments_dic[component_name] =task_comments_dic[component_name] + '<br>' + '<br>' + f'{new_task}:' + task_comments
                 else:
-                    task_comments_dic[component_name] =f'{new_task}:<br>' + task_comments
+                    task_comments_dic[component_name] =f'{new_task}:' + task_comments
 
             # Обрабатываем связанные задачи
             current_task = getSferaTask(new_task)

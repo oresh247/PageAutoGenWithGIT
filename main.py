@@ -326,7 +326,6 @@ def get_comment_text(comments, tag, template_flag):
     return text
 
 
-
 def find_dto_version(text):
     # Используем регулярное выражение для поиска строки с dto_exchange_version
     pattern_dto_version = r'reactive_dto_version\s*=\s*(\S+)'
@@ -620,7 +619,7 @@ def get_release_test_cases(release):
 release = 'OKR_20241208_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
-update_story_flg = False # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)
+update_story_flg = True  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)
 
 # Считываем данные из CSV файла в DataFrame
 release_df = pd.read_csv('release_info.csv', dtype=str)

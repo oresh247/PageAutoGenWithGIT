@@ -448,8 +448,8 @@ def createSferaTask(release):
         "name": "Релиз " + release,
         "assignee": devUser,
         "owner": devUser,
-        "estimation": 86400,
-        "remainder": 86400,
+        "estimation": 28800,
+        "remainder": 28800,
         "description": "Релиз " + release,
         "priority": "average",
         "status": "created",
@@ -616,7 +616,7 @@ def get_release_test_cases(release):
             return test_cases['content']
     return ''
 
-release = 'OKR_20250302_ATM' # Метка релиза
+release = 'OKR_20250204_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 update_story_flg = False  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)

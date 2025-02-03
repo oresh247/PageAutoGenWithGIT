@@ -188,6 +188,7 @@ def get_edto_version_from_git(component_name, new_version):
         print(f"верксия бтблиотеки skmb_reactive_dto:'{skmb_reactive_dto}'")
     return skmb_reactive_dto
 
+
 def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
     component_lst = [] # Список микросервисов релиза
     task_directLink_lst = [] # Список строк HTML для добавления макроса в таблицу по каждому микросервису
@@ -201,6 +202,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
     task_comments_lst = []  # Список версий еДТО по каждому микросервису
     related_task_dic = {}
     tast_cases_dic = {}
+    service_release_version_dic = {}
 
     counter = 10 # Начальный счетчик макросов на странице
     #test_cases = get_release_test_cases(release)
@@ -251,7 +253,6 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
 
             # Получаем прописанные инвентари в комментариях задачи
             inventory = get_comment_text(comments, '#inventory', 0)
-
             # Если есть изменения инвентори
             if inventory != '':
                 if inventory_changed_dic[component_name] != '':
@@ -280,6 +281,12 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
                     task_comments_dic[component_name] =task_comments_dic[component_name] + '<br>' + '<br>' + f'{new_task}:' + task_comments
                 else:
                     task_comments_dic[component_name] =f'{new_task}:' + task_comments
+
+            # Получаем версию поставки прописанную в комментариях задачи
+            task_comments = get_comment_text(comments, '#version', 0)
+            if component_name not in service_release_version_dic:
+                service_release_version_dic[component_name] = task_comments
+
 
             # Обрабатываем связанные задачи
             current_task = getSferaTask(new_task)
@@ -313,7 +320,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
 
 
 
-    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values()), list(related_task_dic.values()), list(tast_cases_dic.values())
+    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values()), list(related_task_dic.values()), list(tast_cases_dic.values()), list(service_release_version_dic.values())
 
 
 def get_comment_text(comments, tag, template_flag):
@@ -348,6 +355,7 @@ def find_dto_version(text):
 
     return ''  # Если ни одна версия не найдена
 
+
 def get_edto_version(component_name, service_build, edto_file_names):
     path = '/file/raw/'
     #file_name = 'gradle.properties'
@@ -368,7 +376,7 @@ def get_edto_version(component_name, service_build, edto_file_names):
     return find_dto_version(response.text)
 
 
-def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst):
+def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst):
     # Проверка на пустоту списка inventory_changed_lst
     if not inventory_changed_lst:
         inventory_changed_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
@@ -384,14 +392,21 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
     # Проверка на пустоту списка tast_cases_lst
     if not tast_cases_lst:
         tast_cases_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
+    # Проверка на пустоту списка service_release_version_lst
+    if not service_release_version_lst:
+        service_release_version_lst = [new_version] * len(component_lst)  # Заполнение номером версии поставки Новый цод строками
+
 
     # Заменить пустые значения на строку 'нет зависимостей'
     related_task_lst = ['нет зависимостей' if item == '' else item for item in related_task_lst]
 
+    # Заменить пустые значения версий на new_version
+    service_release_version_lst = [new_version if item == '' else item for item in service_release_version_lst]
+
     tasks_df = pd.DataFrame({
         'Сервис': component_lst,
         'Задачи в сфере': task_directLink_lst,
-        'Версия поставки Новый цод': new_version,
+        'Версия поставки Новый цод': service_release_version_lst,
         'Версия для откатки': prod_version_lst,
         'Требует выкатку связанный сервис': related_task_lst,
         'Версия еДТО': edto_lst,
@@ -415,10 +430,10 @@ def generating_release_page(parent_page, release, new_version, for_publication_f
     tasks = get_release_tasks(release)
 
     # Обрабатываем запрос, проходя по всем задачам и формируя списки
-    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
+    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
 
     # Создаем dataframe
-    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst)
+    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst)
     pd.set_option('display.width', 320)
     pd.set_option('display.max_columns', 20)
     np.set_printoptions(linewidth=320)
@@ -621,7 +636,8 @@ def get_release_test_cases(release):
             return test_cases['content']
     return ''
 
-release = 'OKR_20250216_ATM' # Метка релиза
+
+release = 'OKR_20250302_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 update_story_flg = False  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)

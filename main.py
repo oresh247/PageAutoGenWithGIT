@@ -44,6 +44,7 @@ GIT_BRANCH_PREFIX = config["GIT"]["GIT_BRANCH_PREFIX"]
 
 TASK_RELATION_TYPE_LST = json.loads(config["TASK"]["TASK_RELATION_TYPE_LST"])
 TASK_ENTITY_TYPE_LST = json.loads(config["TASK"]["TASK_ENTITY_TYPE_LST"])
+SERVICE_VTBL_NOTIFICATION_LST = json.loads(config["TASK"]["SERVICE_VTBL_NOTIFICATION_LST"])
 
 session = requests.Session()
 session.post(sferaUrlLogin, json={"username": devUser, "password": devPassword}, verify=False)
@@ -235,6 +236,10 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
                         prod_version_lst.append(version)
                     else:
                         prod_version_lst.append('')
+                    # Есть сервисы ВТБЛ и требуется добавление информации в комментарий об оповещении
+                    if component_name in SERVICE_VTBL_NOTIFICATION_LST:
+                        task_comments_dic[component_name] = "ТРЕБУЕТ ОПОВЕЩЕНИЯ ВТБЛ О РЕЛИЗЕ!"
+
         else:
             print("Нет компоненты: ",task['number'])
 
@@ -616,7 +621,7 @@ def get_release_test_cases(release):
             return test_cases['content']
     return ''
 
-release = 'OKR_20250204_ATM' # Метка релиза
+release = 'OKR_20250216_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 update_story_flg = False  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)

@@ -263,16 +263,16 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
 
             # Получаем последнюю сборку прописанную в комментариях задачи
             service_build = get_comment_text(comments, '#build', 1)
-            # Если есть номер сборки
-            if service_build != '':
-                # Получаем сборку еДТО
-                service_edto_version = get_edto_version(component_name, service_build, edto_file_names)
-                #service_edto_version = get_edto_version_from_git(component_name, service_build)
-                if service_edto_version != '':
-                    if component_name in inventory_changed_dic:
-                        edto_dic[component_name] = edto_dic[component_name] + '<br>' + service_edto_version
-                    else:
-                        edto_dic[component_name] = service_edto_version
+            # # Если есть номер сборки
+            # if service_build != '':
+            #     # Получаем сборку еДТО
+            #     service_edto_version = get_edto_version(component_name, service_build, edto_file_names)
+            #     #service_edto_version = get_edto_version_from_git(component_name, service_build)
+            #     if service_edto_version != '':
+            #         if component_name in inventory_changed_dic:
+            #             edto_dic[component_name] = edto_dic[component_name] + '<br>' + service_edto_version
+            #         else:
+            #             edto_dic[component_name] = service_edto_version
 
             # Получаем комментарии к задаче
             task_comments = get_comment_text(comments, '#comment', 0)
@@ -650,7 +650,7 @@ def get_release_test_cases(release):
     return ''
 
 
-release = 'OKR_20250216_ATM' # Метка релиза
+release = 'OKR_20250302_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 update_story_flg = False  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)

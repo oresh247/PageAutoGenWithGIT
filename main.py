@@ -203,6 +203,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
     related_task_dic = {}
     tast_cases_dic = {}
     service_release_version_dic = {}
+    service_edto_version_dic = {}
 
     counter = 10 # Начальный счетчик макросов на странице
     #test_cases = get_release_test_cases(release)
@@ -226,7 +227,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
                     inventory_changed_dic[component_name] = ''
                     task_comments_dic[component_name] = ''
                     #edto_dic[component_name] = get_edto_version_from_git(component_name, new_version)
-                    edto_dic[component_name] = get_edto_version(component_name, new_version, edto_file_names)
+                    #edto_dic[component_name] = get_edto_version(component_name, new_version, edto_file_names)
                     template = f"""
             <p>  <macro class=is-locked data-name=SferaTasks id=SferaTasks-mce_{counter} contenteditable=false    data-rtc-uid=16cce9cf-5572-4a48-a85b-3375c3c8ed6d><macro-parameter data-name=query      data-rtc-uid=d2a03405-badc-4db9-b558-c63defb0c191>label = '{release}' and      component='{component_name}'</macro-parameter><macro-parameter data-name=name      data-rtc-uid=299855c1-a21a-4a91-88b3-99539008e3c6>{release}_{component_name}</macro-parameter><macro-parameter      data-name=maxTasks data-rtc-uid=4a9ba1c3-6e18-4939-a108-7890b7347054>20</macro-parameter><macro-parameter      data-name=attributes      data-rtc-uid=150ff77e-2639-48fa-bba0-32dd06b4104f>[{{'name':'Ключ','code':'number'}},{{'name':'Название','code':'name'}},{{'name':'Статус','code':'status'}},{{'name':'Исполнитель','code':'assignee'}}]</macro-parameter><macro-parameter      data-name=createdDate      data-rtc-uid=05fa3e33-7799-4ddc-bc7e-316a518aeeaa>1716579558662</macro-parameter><macro-parameter      data-name=isLocked      data-rtc-uid=3ba10cb8-4865-45c1-aae9-0e8c5437f9c8>false</macro-parameter><macro-rich-text      data-rtc-uid=5dfe052c-765d-4974-8d5d-4d3e356f9bd9></macro-rich-text></macro></p>
             """
@@ -287,6 +288,11 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             if component_name not in service_release_version_dic:
                 service_release_version_dic[component_name] = task_comments
 
+            # Получаем версию еДТО прописанную в комментариях задачи
+            task_comments = get_comment_text(comments, '#edto', 0)
+            if component_name not in service_edto_version_dic:
+                service_edto_version_dic[component_name] = task_comments
+
 
             # Обрабатываем связанные задачи
             current_task = getSferaTask(new_task)
@@ -320,7 +326,7 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
 
 
 
-    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values()), list(related_task_dic.values()), list(tast_cases_dic.values()), list(service_release_version_dic.values())
+    return component_lst, task_directLink_lst, prod_version_lst, task_lst, list(inventory_changed_dic.values()), list(edto_dic.values()), list(task_comments_dic.values()), list(related_task_dic.values()), list(tast_cases_dic.values()), list(service_release_version_dic.values()), list(service_edto_version_dic.values())
 
 
 def get_comment_text(comments, tag, template_flag):
@@ -376,13 +382,13 @@ def get_edto_version(component_name, service_build, edto_file_names):
     return find_dto_version(response.text)
 
 
-def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst):
+def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst, service_edto_version_lst):
     # Проверка на пустоту списка inventory_changed_lst
     if not inventory_changed_lst:
         inventory_changed_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
     # Проверка на пустоту списка edto_lst
-    if not edto_lst:
-        edto_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
+    # if not edto_lst:
+    #     edto_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
     # Проверка на пустоту списка task_comments_lst
     if not task_comments_lst:
         task_comments_lst = [''] * len(component_lst)  # Заполнение пустыми строками, если список пустой
@@ -395,10 +401,17 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
     # Проверка на пустоту списка service_release_version_lst
     if not service_release_version_lst:
         service_release_version_lst = [new_version] * len(component_lst)  # Заполнение номером версии поставки Новый цод строками
+    # Проверка на пустоту списка service_edto_version_lst
+    if not service_edto_version_lst:
+        service_edto_version_lst = [new_version] * len(
+            component_lst)  # Заполнение номером версии поставки Новый цод строками
 
 
     # Заменить пустые значения на строку 'нет зависимостей'
     related_task_lst = ['нет зависимостей' if item == '' else item for item in related_task_lst]
+
+    # Заменить пустые значения на строку 'нет зависимостей'
+    service_edto_version_lst = ['нет обновляли еДТО' if item == '' else item for item in service_edto_version_lst]
 
     # Заменить пустые значения версий на new_version
     service_release_version_lst = [new_version if item == '' else item for item in service_release_version_lst]
@@ -409,7 +422,7 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
         'Версия поставки Новый цод': service_release_version_lst,
         'Версия для откатки': prod_version_lst,
         'Требует выкатку связанный сервис': related_task_lst,
-        'Версия еДТО': edto_lst,
+        'Версия еДТО': service_edto_version_lst,
         'Тест-кейсы': tast_cases_lst,
         'Изменение инвентари': inventory_changed_lst,
         'Комментарии': task_comments_lst
@@ -430,10 +443,10 @@ def generating_release_page(parent_page, release, new_version, for_publication_f
     tasks = get_release_tasks(release)
 
     # Обрабатываем запрос, проходя по всем задачам и формируя списки
-    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
+    component_lst, task_directLink_lst, prod_version_lst, task_lst, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst, service_edto_version_lst = formation_of_lists(tasks, release, prod, edto_file_names, new_version)
 
     # Создаем dataframe
-    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst)
+    tasks_df = create_df(component_lst, task_directLink_lst, prod_version_lst, new_version, inventory_changed_lst, edto_lst, task_comments_lst, related_task_lst, tast_cases_lst, service_release_version_lst, service_edto_version_lst)
     pd.set_option('display.width', 320)
     pd.set_option('display.max_columns', 20)
     np.set_printoptions(linewidth=320)
@@ -637,7 +650,7 @@ def get_release_test_cases(release):
     return ''
 
 
-release = 'OKR_20250302_ATM' # Метка релиза
+release = 'OKR_20250216_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 update_story_flg = False  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)

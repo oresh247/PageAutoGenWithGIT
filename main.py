@@ -411,7 +411,7 @@ def create_df(component_lst, task_directLink_lst, prod_version_lst, new_version,
     related_task_lst = ['нет зависимостей' if item == '' else item for item in related_task_lst]
 
     # Заменить пустые значения на строку 'нет зависимостей'
-    service_edto_version_lst = ['нет обновляли еДТО' if item == '' else item for item in service_edto_version_lst]
+    service_edto_version_lst = ['не обновляли еДТО' if item == '' else item for item in service_edto_version_lst]
 
     # Заменить пустые значения версий на new_version
     service_release_version_lst = [new_version if item == '' else item for item in service_release_version_lst]

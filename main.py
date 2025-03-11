@@ -287,11 +287,16 @@ def formation_of_lists(tasks, release, prod, edto_file_names, new_version):
             task_comments = get_comment_text(comments, '#version', 0)
             if component_name not in service_release_version_dic:
                 service_release_version_dic[component_name] = task_comments
+            elif service_release_version_dic[component_name] == '' and task_comments != '':
+                service_release_version_dic[component_name] = task_comments
 
             # Получаем версию еДТО прописанную в комментариях задачи
             task_comments = get_comment_text(comments, '#edto', 0)
             if component_name not in service_edto_version_dic:
                 service_edto_version_dic[component_name] = task_comments
+            elif service_edto_version_dic[component_name] == '' and task_comments !='':
+                service_edto_version_dic[component_name] = task_comments
+
 
 
             # Обрабатываем связанные задачи
@@ -461,7 +466,7 @@ def generating_release_page(parent_page, release, new_version, for_publication_f
             replace_release_html(html, parent_page, release, page_id)
         else:
             publication_release_html(html, parent_page, release)
-    return task_lst
+    return task_lst, tasks
 
 
 def add_task_to_story(task_list,story):
@@ -650,7 +655,7 @@ def get_release_test_cases(release):
     return ''
 
 
-release = 'OKR_20250406_ATM' # Метка релиза
+release = 'OKR_20250316_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 update_story_flg = False  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)
@@ -674,7 +679,7 @@ print(f"story: {story}")
 print(f"parent_page: {parent_page}")
 
 # Генерация страницы ЗНИ с QL выборками
-task_lst = generating_release_page(parent_page, release, new_version, for_publication_flg, replace_flg, page_id)
+task_lst, tasks = generating_release_page(parent_page, release, new_version, for_publication_flg, replace_flg, page_id)
 if update_story_flg:
     if not isinstance(story, str):
         story = createSferaTask(release)

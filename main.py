@@ -655,7 +655,7 @@ def get_release_test_cases(release):
     return ''
 
 
-release = 'OKR_20250406_ATM' # Метка релиза
+release = 'OKR_20250511_ATM' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = True # Если True - то заменяем содержимое страницы
 update_story_flg = False  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)

@@ -655,10 +655,13 @@ def get_release_test_cases(release):
     return ''
 
 
-release = 'OKR_20250525_ATM' # Метка релиза
+# ------ Основной блок конфигурации
+release = 'Заявка_20250511_АТМ' # Метка релиза
 for_publication_flg = True # Если True - то публикуем, если False, только возврат списка задач
 replace_flg = False # Если True - то заменяем содержимое страницы
 update_story_flg = False  # Если True - обновляем спиисок задач в story (удаляем все и добавляем те, что в текущем релизе)
+# ------
+
 
 # Считываем данные из CSV файла в DataFrame
 release_df = pd.read_csv('release_info.csv', dtype=str)
